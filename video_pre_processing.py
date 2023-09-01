@@ -219,9 +219,3 @@ class VideoPreProcessing():
                 self.frames_for_analysis.append(self.get_frame())
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
-
-
-sss = video_pre_processing()
-img1 = cv2.imread("1.jpg")
-img2 = cv2.imread("2.jpg")
-sss.merge_images(img1, img2, 1920, 1080)
