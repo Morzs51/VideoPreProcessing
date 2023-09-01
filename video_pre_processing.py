@@ -20,7 +20,6 @@ class VideoPreProcessing():
         self.pipeline = rs.pipeline()
         self.config_realsense = rs.config()
 
-    # новое
     def set_config_realsense(self, stream_type=config.stream_type, weight=config.input_weight,
                              height=config.input_height, stream_format=config.stream_format, fps=config.fps):
         """
@@ -120,7 +119,6 @@ class VideoPreProcessing():
         cv2.destroyAllWindows()
         return result
 
-    # поменял
     def set_video_capture(self, device=config.device, path=config.input_path):
         """
         Использование видеопотока или видеофайла
@@ -187,7 +185,6 @@ class VideoPreProcessing():
 
         self.cap.set(cv2.CAP_PROP_FPS, config.fps)
 
-    # поменял
     def get_frame(self):
         """
         Получение кадра из видео
@@ -207,7 +204,6 @@ class VideoPreProcessing():
 
         self.frame_interval = new_time
 
-    # поменял чуток
     def get_frames_for_analysis(self):
         """Интервал получения кадра к анализу"""
 
