@@ -17,3 +17,5 @@ class Config:
         self.codec = 'bag'                                          # Кодек записываемого видеофайла
         self.stream_type = (rs.stream.depth, rs.stream.color)       # Тип запущенного видопотока
         self.stream_format = (rs.format.z16, rs.format.bgr8)        # Формат запущенного видеопотока
+        self.merge_iamge_weight = 1500                              # Ширина слекинного изображения
+        self.merge_iamge_height = 400                               # Высота слекинного изображения
