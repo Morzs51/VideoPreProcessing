@@ -82,7 +82,7 @@ class VideoPreProcessing():
         new_img = cv2.resize(img, dsize=(weight, height), interpolation=cv2.INTER_AREA)
         return new_img
 
-    def merge_images(self, image1, image2, image_weight, image_height):
+    def merge_images(self, image1, image2, image_weight=config.merge_iamge_weight, image_height=config.merge_iamge_height):
         """
         Склейка вдух изображений
         :param image1: первое передаваемое изображение прочитанное библиотекой cv2 (cv.imread)
