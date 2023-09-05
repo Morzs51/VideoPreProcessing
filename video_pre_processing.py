@@ -94,7 +94,8 @@ class VideoPreProcessing():
 
         stitcher = cv2.Stitcher.create()
         status, stitched_image = stitcher.stitch([image1, image2])
-        stitched_image = self.set_image_size(stitched_image, image_weight, image_height)
+        if image_height is not None or image_weight is not None:
+            stitched_image = self.set_image_size(stitched_image, image_weight, image_height)
         if status == cv2.Stitcher_OK:
             cv2.imshow('st', stitched_image)
             cv2.waitKey(0)
