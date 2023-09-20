@@ -19,3 +19,5 @@ class Config:
         self.stream_format = (rs.format.z16, rs.format.bgr8)        # Формат запущенного видеопотока
         self.merge_iamge_weight = 1500                              # Ширина слекинного изображения
         self.merge_iamge_height = 400                               # Высота слекинного изображения
+        self.skip_frame = 200                                       # Начальный/текущий кадр
+        self.StereoSGBM_or_StereoBM = 0                             # Какой вариант стерео кадра 0 SGBM, другое число BM
