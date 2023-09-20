@@ -1,5 +1,4 @@
 import cv2
-import cv2 as cv
 import pyrealsense2 as rs
 import numpy as np
 import time
@@ -190,21 +189,22 @@ class VideoPreProcessing:
 
         self.cap.set(cv2.CAP_PROP_FPS, config.fps)
 
-    def get_frame(self):
+    def get_frame_depth(self, left_img=None, right_img=None):
         """
         Получение кадра из видео
-        :return: полученны два кадра (цвета и глубины)
+        :param left_img: левое изображение 
+        :param right_img: правое изображение
+        :return: получение кадра глубины
         """
         if self.is_the_function_initialized_set_config_realsense:
             frame = self.pipeline.wait_for_frames()
-            color_frame = frame.get_color_frame()
             depth_frame = frame.get_depth_frame()
-            return color_frame, depth_frame
+            return depth_frame
         else:
             if config.StereoSGBM_or_StereoBM == 0:
-                return self.StereoSGBM_func()
+                return self.StereoSGBM_func_frame(left_img, right_img)
             else:
-                return self.StereoBM_func()
+                return self.StereoBM_func_frame(left_img, right_img)
 
     def set_frame_interval(self, new_time=config.frame_interval):
         """
@@ -248,9 +248,9 @@ class VideoPreProcessing:
         # Normally, 1 or 2 is good enough.
         speckleRange = 2
         disp12MaxDiff = 0
-        img1_undistorted = cv.imread("left400.png", cv.IMREAD_GRAYSCALE)
-        img2_undistorted = cv.imread("right400.png", cv.IMREAD_GRAYSCALE)
-        stereo = cv.StereoSGBM_create(
+        img1_undistorted = cv2.imread("left400.png", cv2.IMREAD_GRAYSCALE)
+        img2_undistorted = cv2.imread("right400.png", cv2.IMREAD_GRAYSCALE)
+        stereo = cv2.StereoSGBM_create(
             minDisparity=min_disp,
             numDisparities=num_disp,
             blockSize=block_size,
@@ -264,28 +264,28 @@ class VideoPreProcessing:
         disparity_SGBM = stereo.compute(img1_undistorted, img2_undistorted)
 
         # Normalize the values to a range from 0..255 for a grayscale image
-        disparity_SGBM = cv.normalize(disparity_SGBM, disparity_SGBM, alpha=255,
-                                      beta=0, norm_type=cv.NORM_MINMAX)
+        disparity_SGBM = cv2.normalize(disparity_SGBM, disparity_SGBM, alpha=255,
+                                      beta=0, norm_type=cv2.NORM_MINMAX)
         disparity_SGBM = np.uint8(disparity_SGBM)
-        cv.imshow("Disparity", disparity_SGBM)
-        cv.imwrite("disparity_SGBM_norm.png", disparity_SGBM)
+        cv2.imshow("Disparity", disparity_SGBM)
+        cv2.imwrite("disparity_SGBM_norm.png", disparity_SGBM)
         print("finish")
         i = 0
         while (10 > i):
             i -= 1
-            if cv.waitKey(1) & 0xFF == ord('q'):
+            if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
-    def StereoSGBM_func(self, skip_frame=config.skip_frame):
+    def StereoSGBM_func_video(self, skip_frame=config.skip_frame):
         """
         Функция получения стерео SGBM кадра
         :param skip_frame: текущий кадр для чтения по переданному костылю минимальноек значение равняется 200
-        :return: цветной левый кадр и стерео SGBM кадр
+        :return: стерео SGBM кадр
         """
         if skip_frame < 200:
             skip_frame = 200
             config.skip_frame = 200
-        video = cv.VideoCapture("video.avi")
+        video = cv2.VideoCapture("video.avi")
         video.set(cv2.CAP_PROP_POS_FRAMES, skip_frame)
         config.skip_frame = +1
         # Вариант исполнения получения кадра глубины
@@ -316,7 +316,7 @@ class VideoPreProcessing:
         speckleRange = 2
         disp12MaxDiff = 2
 
-        stereo = cv.StereoSGBM_create(
+        stereo = cv2.StereoSGBM_create(
             minDisparity=min_disp,
             numDisparities=num_disp,
             blockSize=block_size,
@@ -329,7 +329,7 @@ class VideoPreProcessing:
         )
         # инициализации класса Стерео описание параметров с оф документации
         ret, frame = video.read()
-        gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         height, width = gray.shape[:2]
         #print("H:" + str(height) + "  W:" + str(width))
         h = int(height)
@@ -339,25 +339,84 @@ class VideoPreProcessing:
         right_img = gray[y:y + h, x1:x1 + w]  # получаем правое изображение из сдвоенного
         disparity_SGBM = stereo.compute(left_img, right_img)
         # Normalize the values to a range from 0..255 for a grayscale image
-        disparity_SGBM = cv.normalize(disparity_SGBM, disparity_SGBM, alpha=125,
-                                          beta=0, norm_type=cv.NORM_MINMAX)  # увеличиваем контраст
+        disparity_SGBM = cv2.normalize(disparity_SGBM, disparity_SGBM, alpha=125,
+                                          beta=0, norm_type=cv2.NORM_MINMAX)  # увеличиваем контраст
         disparity_SGBM = np.uint8(disparity_SGBM)
         res = left_img + disparity_SGBM  # комплексированное изображение
         #cv.imshow('left', res)
         video.release()
-        cv.destroyAllWindows()
-        return left_img, res
+        cv2.destroyAllWindows()
+        return res
+
+
+    def StereoSGBM_func_frame(self, left_img, right_img):
+        """
+        Получение стерео кадра ищ двух изображений
+        :param left_img: левое изображение прочитанное библиотекой cv2 (cv.imread)
+        :param right_img: правое изображение прочитанное библиотекой cv2 (cv.imread)
+        :return: стерео SGBM кадр
+        """
+        # Вариант исполнения получения кадра глубины
+        h = 0
+        w = 0
+        # Ширина и высота кадра
+        x = 0
+        x1 = 0
+        y = 0
+        # Отступы для первого кадра x y и для второго x1 y
+
+        # Matched block size. It must be an odd number >=1 . Normally, it should be somewhere in the 3..11 range.
+        block_size = 3
+        min_disp = -176
+        max_disp = 176
+        # Maximum disparity minus minimum disparity. The value is always greater than zero.
+        # In the current implementation, this parameter must be divisible by 16.
+        num_disp = max_disp - min_disp
+        # Margin in percentage by which the best (minimum) computed cost function value should "win" the second best value to consider the found match correct.
+        # Normally, a value within the 5-15 range is good enough
+        uniquenessRatio = 15
+        # Maximum size of smooth disparity regions to consider their noise speckles and invalidate.
+        # Set it to 0 to disable speckle filtering. Otherwise, set it somewhere in the 50-200 range.
+        speckleWindowSize = 16
+        # Maximum disparity variation within each connected component.
+        # If you do speckle filtering, set the parameter to a positive value, it will be implicitly multiplied by 16.
+        # Normally, 1 or 2 is good enough.
+        speckleRange = 2
+        disp12MaxDiff = 2
+
+        stereo = cv2.StereoSGBM_create(
+            minDisparity=min_disp,
+            numDisparities=num_disp,
+            blockSize=block_size,
+            uniquenessRatio=uniquenessRatio,
+            speckleWindowSize=speckleWindowSize,
+            speckleRange=speckleRange,
+            disp12MaxDiff=disp12MaxDiff,
+            P1=8 * 1 * block_size * block_size,
+            P2=32 * 1 * block_size * block_size,
+        )
+        # инициализации класса Стерео описание параметров с оф документации
+        left_img = self.color_palette(left_img, cv2.COLOR_BGR2GRAY)
+        right_img = self.color_palette(right_img, cv2.COLOR_BGR2GRAY)
+        disparity_SGBM = stereo.compute(left_img, right_img)
+        # Normalize the values to a range from 0..255 for a grayscale image
+        disparity_SGBM = cv2.normalize(disparity_SGBM, disparity_SGBM, alpha=125,
+                                          beta=0, norm_type=cv2.NORM_MINMAX)  # увеличиваем контраст
+        disparity_SGBM = np.uint8(disparity_SGBM)
+        res = left_img + disparity_SGBM  # комплексированное изображение
+        #cv.imshow('left', res)
+        return res
 
     def StereoBM_func(self, skip_frame=config.skip_frame):
         """
         Функция получения стерео BM кадра
         :param skip_frame: текущий кадр для чтения по переданному костылю минимальноек значение равняется 200
-        :return: цветной левый кадр и стерео BM кадр
+        :return: стерео BM кадр
         """
         if skip_frame < 200:
             skip_frame = 200
             config.skip_frame = 200
-        video = cv.VideoCapture("video.avi")
+        video = cv2.VideoCapture("video.avi")
         video.set(cv2.CAP_PROP_POS_FRAMES, skip_frame)
         config.skip_frame = +1
         # Вариант исполнения получения кадра глубины
@@ -369,10 +428,10 @@ class VideoPreProcessing:
         y = 0
         # Отступы для первого кадра x y и для второго x1 y
 
-        stereo = cv.StereoBM.create(numDisparities=16, blockSize=15)
+        stereo = cv2.StereoBM.create(numDisparities=16, blockSize=15)
 
         ret, frame = video.read()
-        gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         height, width = gray.shape[:2]
         #print("H:" + str(height) + "  W:" + str(width))
         h = int(height)
@@ -382,24 +441,65 @@ class VideoPreProcessing:
         right_img = gray[y:y + h, x1:x1 + w]
         disparity = stereo.compute(left_img, right_img)
         # Normalize the values to a range from 0..255 for a grayscale image
-        disparity = cv.normalize(disparity, disparity, alpha=125,
-                                    beta=0, norm_type=cv.NORM_MINMAX)
+        disparity = cv2.normalize(disparity, disparity, alpha=125,
+                                    beta=0, norm_type=cv2.NORM_MINMAX)
         disparity = np.uint8(disparity)
         res = disparity
         #cv.imshow('left', res)
         video.release()
-        cv.destroyAllWindows()
-        return left_img, res
+        cv2.destroyAllWindows()
+        return res
+    
+    
+    def StereoBM_func_frame(self, left_img, right_img):
+        """
+        Получение стерео кадра ищ двух изображений
+        :param left_img: левое изображение прочитанное библиотекой cv2 (cv.imread)
+        :param right_img: правое изображение прочитанное библиотекой cv2 (cv.imread)
+        :return: стерео BM кадр
+        """
+        # Вариант исполнения получения кадра глубины
+        h = 0
+        w = 0
+        # Ширина и высота кадра
+        x = 0
+        x1 = 0
+        y = 0
+        # Отступы для первого кадра x y и для второго x1 y
+
+        stereo = cv2.StereoBM.create(numDisparities=16, blockSize=15)
+
+        left_img = self.color_palette(left_img, cv2.COLOR_BGR2GRAY)
+        right_img = self.color_palette(right_img, cv2.COLOR_BGR2GRAY)
+        disparity = stereo.compute(left_img, right_img)
+        # Normalize the values to a range from 0..255 for a grayscale image
+        disparity = cv2.normalize(disparity, disparity, alpha=125,
+                                    beta=0, norm_type=cv2.NORM_MINMAX)
+        disparity = np.uint8(disparity)
+        res = disparity
+        return res
 
 
-    def crop(self, img):
+    def get_frame_color(self, img):
         """
         Обрезка изображений пополам
         :param img: передаваемое изображение прочитанное библиотекой cv2 (cv.imread)
-        :return: левая половина изначального изображения и правая половина 
+        :return: цветное изображение в одном или двух экземплярах
         """
-        height, width, _ = img.shape
-        half_width = width // 2
-        left_image = img[:, :half_width]
-        right_image = img[:, half_width:]
-        return left_image, right_image
+        if self.is_the_function_initialized_set_config_realsense:
+            frame = self.pipeline.wait_for_frames()
+            color_frame = frame.get_color_frame()
+            return color_frame
+        else:
+            height, width, _ = img.shape
+            half_width = width // 2
+            left_image = img[:, :half_width]
+            right_image = img[:, half_width:]
+            return left_image, right_image
+
+
+sss = VideoPreProcessing()
+#img1 = cv2.imread("1.jpg")
+#img2 = cv2.imread("2.jpg")
+#sss.merge_images(img1, img2, 1920, 1080)
+#sss.StereoBM_func()
