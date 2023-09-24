@@ -15,16 +15,21 @@ def run_test():
     test.is_image_blured(img1)
     test.is_image_blured(img3)
 
-    test.set_image_size(img2)
+    img2 = test.set_image_size(img2)
     cv2.imshow("изображение с измененныым размером", img2)
+    cv2.waitKey(0)
 
     merge_img = test.merge_images(cv2.imread("1.jpg"), cv2.imread("2.jpg"))
     cv2.imshow("склеенное изображение", merge_img)
+    cv2.waitKey(0)
 
-    test.image_histogram_alignment(img3)
+    img3 = test.image_histogram_alignment(img3)
     cv2.imshow("изображение с измененной контрастностью", img3)
+    cv2.waitKey(0)
 
     test.set_video_capture()
 
     frame = test.get_color_frame()
-    cv2.imshow("кадр глубины", test.get_depth_frame(test.cut_frame(frame)))
+    depth_frame = test.get_depth_frame(frame)
+    cv2.imshow("кадр глубины", depth_frame)
+    cv2.waitKey(0)
