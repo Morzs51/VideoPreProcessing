@@ -1,5 +1,4 @@
-import cv2
-from video_pre_processing import VideoPreProcessing
+from test import run_test
 
-
-test = VideoPreProcessing()
+if __name__ == '__main__':
+    run_test()
