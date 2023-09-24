@@ -34,7 +34,9 @@ class VideoPreprocessing:
     def is_image_blured(self, img):
         gray_img = self.change_image_color_mode(img, cv2.COLOR_BGR2GRAY)
         if cv2.Laplacian(gray_img, cv2.CV_64F).var() < self.config.blur_threshold:
+            log.info("изображение размыто")
             return True
+        log.info("изображение не размыто")
         return False
 
     def set_image_size(self, img, shape=None):
