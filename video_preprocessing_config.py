@@ -3,8 +3,8 @@ import pyrealsense2 as rs
 
 class Config:
     def __init__(self):
-        self.input_width = 100
-        self.input_height = 100
+        self.input_width = 1000
+        self.input_height = 1000
         self.output_width = 640
         self.output_height = 480
         self.merge_image_width = 1280
