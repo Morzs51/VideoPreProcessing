@@ -8,9 +8,10 @@ def run_test():
     img2 = cv2.imread("2.jpg")
     img3 = cv2.imread("3.jpg")
 
-    test.change_image_color_mode(img1)
+    img1 = test.change_image_color_mode(img1, cv2.COLOR_BGR2GRAY)
     cv2.imshow('после изменений', img1)
     cv2.waitKey(0)
+    img1 = test.change_image_color_mode(img1, cv2.COLOR_GRAY2BGR)
 
     test.is_image_blured(img1)
     test.is_image_blured(img3)
