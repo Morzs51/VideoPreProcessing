@@ -62,7 +62,7 @@ class VideoPreprocessing:
     def image_histogram_alignment(self, img):
         contrast_img = cv2.equalizeHist(self.change_image_color_mode(img, cv2.COLOR_BGR2GRAY))
         contrast_img = self.change_image_color_mode(contrast_img, cv2.COLOR_GRAY2BGR)
-        contrast_img = np.hstack((img, contrast_img))
+        #contrast_img = np.hstack((img, contrast_img))
         log.info("успешное изменение контрастности изображения")
         return contrast_img
 
